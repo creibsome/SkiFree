@@ -287,7 +287,11 @@ $(document).ready(function() {
         $(window).keydown(function(event) {
             switch(event.which) {
                 case 37: // left
-                    if(skierDirection === 1) {
+                    //Ensure skierDirection is set to LEFT if pressing left after a crash.
+                    if(skierDirection === 0) {
+                      skierDirection = 1;
+                    }
+                    else if(skierDirection === 1) {
                         skierMapX -= skierSpeed;
                         placeNewObstacle(skierDirection);
                     }
@@ -297,7 +301,11 @@ $(document).ready(function() {
                     event.preventDefault();
                     break;
                 case 39: // right
-                    if(skierDirection === 5) {
+                    //Ensure skierDirection is set to LEFT if pressing left after a crash.
+                    if(skierDirection === 0) {
+                      skierDirection = 5;
+                    }
+                    else if(skierDirection === 5) {
                         skierMapX += skierSpeed;
                         placeNewObstacle(skierDirection);
                     }
