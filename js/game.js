@@ -1,3 +1,5 @@
+const skierBaseSpeed = 5;
+const skierSpeedStep = 2500;
 class Game {
   constructor() {
     this.canvas = null;
@@ -247,11 +249,18 @@ class Game {
     this.ctx.fillText("Hiscore: " + this.hiscore, 10, 45);
   };
 
+  //Increase skier speed by 1 unit every 2500 points earned
+  updateSkierSpeed() {
+    this.skier.speed = skierBaseSpeed + Math.floor(this.calcScore() / skierSpeedStep);
+  };
+
   gameLoop() {
     if (this.skier.direction !== 0) {
       this.ctx.save();
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);  // Retina support
       this.clearCanvas();
+
+      this.updateSkierSpeed();
 
       this.skier.move();
 
@@ -275,7 +284,7 @@ class Game {
   };
 
   createSprites() {
-    this.skier = new Skier(0, 0, this, 5, 8);
+    this.skier = new Skier(0, 0, this, skierBaseSpeed, 8);
     this.obstacles = [];
     this.createInitialObstacles();
   }
