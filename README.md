@@ -74,4 +74,4 @@ Bugs Fixed:
 * `mime` library referenced in `package-lock.json` was outdated and flagged as a vulnerability
 
 Known Bugs:
-* None
+* If you can get the skier moving quickly enough, you can probably clip directly through obstacles (position moved per frame would be too large to trigger a collision detection). I left this in as I thought it was a fun quirk, but could be fixed by updating the collision detection to check along the skier's moved path instead of just its current position.
