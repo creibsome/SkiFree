@@ -45,10 +45,10 @@ class Sprite {
     var image = this.getCurrentAsset().img;
 
     return {
-        left: this._x,
-        right: this._x + image.width,
-        top: this._y + image.height - 5,
-        bottom: this._y + image.height
+      left: this._x,
+      right: this._x + image.width,
+      top: this._y + image.height - 5,
+      bottom: this._y + image.height
     };
   };
 

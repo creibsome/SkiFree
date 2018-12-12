@@ -42,7 +42,7 @@ class Skier extends Sprite {
 
   //Calculate the distance moved depending on the direction and speed
   calcDistanceMoved(isDiagonal) {
-    var DIAGONAL_SPEED_MOD = 1.4142;
+    const DIAGONAL_SPEED_MOD = 1.4142;
     var distance = this.speed;
 
     if (isDiagonal) {

@@ -23,7 +23,7 @@ class Obstacle extends Sprite {
 
   getCurrentAsset() {
     var _this = this;
-    return _.find(Assets, function (asset) {
+    return _.find(Assets, function(asset) {
       return asset.id === _this.type;
     });
   };
@@ -35,7 +35,7 @@ class Obstacle extends Sprite {
 
     //Don't draw obstacle if significantly out of viewport
     if (mapX < -100 || mapX > this.gameWidth + 50 || mapY < -100 || mapY > this.gameHeight + 50) {
-        return;
+      return;
     }
 
     this.game.ctx.drawImage(obstacleImage, mapX, mapY, obstacleImage.width, obstacleImage.height);
