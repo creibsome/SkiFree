@@ -1,342 +1,255 @@
-$(document).ready(function() {
+class Game {
+  constructor() {
+    this.canvas = null;
+    this._ctx = null;
+    this._skier = null;
+    this._obstacles = [];
+    this.width = 0;
+    this.height = 0;
+  }
 
-    var assets = {
-        'skierCrash' : 'img/skier_crash.png',
-        'skierLeft' : 'img/skier_left.png',
-        'skierLeftDown' : 'img/skier_left_down.png',
-        'skierDown' : 'img/skier_down.png',
-        'skierRightDown' : 'img/skier_right_down.png',
-        'skierRight' : 'img/skier_right.png',
-        'tree' : 'img/tree_1.png',
-        'treeCluster' : 'img/tree_cluster.png',
-        'rock1' : 'img/rock_1.png',
-        'rock2' : 'img/rock_2.png'
-    };
-    var loadedAssets = {};
-
-    var obstacleTypes = [
-        'tree',
-        'treeCluster',
-        'rock1',
-        'rock2'
-    ];
-
-    var obstacles = [];
-
-    var gameWidth = window.innerWidth;
-    var gameHeight = window.innerHeight;
-    var canvas = $('<canvas></canvas>')
-        .attr('width', gameWidth * window.devicePixelRatio)
-        .attr('height', gameHeight * window.devicePixelRatio)
+  createCanvas() {
+    this.canvas = $('<canvas></canvas>')
+        .attr('width', this.width * window.devicePixelRatio)
+        .attr('height', this.height * window.devicePixelRatio)
         .css({
-            width: gameWidth + 'px',
-            height: gameHeight + 'px'
-        });
-    $('body').append(canvas);
-    var ctx = canvas[0].getContext('2d');
-
-    var skierDirection = 5;
-    var skierMapX = 0;
-    var skierMapY = 0;
-    var skierSpeed = 8;
-
-    var clearCanvas = function() {
-        ctx.clearRect(0, 0, gameWidth, gameHeight);
-    };
-
-    var moveSkier = function() {
-        switch(skierDirection) {
-            case 2:
-                skierMapX -= Math.round(skierSpeed / 1.4142);
-                skierMapY += Math.round(skierSpeed / 1.4142);
-
-                placeNewObstacle(skierDirection);
-                break;
-            case 3:
-                skierMapY += skierSpeed;
-
-                placeNewObstacle(skierDirection);
-                break;
-            case 4:
-                skierMapX += skierSpeed / 1.4142;
-                skierMapY += skierSpeed / 1.4142;
-
-                placeNewObstacle(skierDirection);
-                break;
-        }
-    };
-
-    var getSkierAsset = function() {
-        var skierAssetName;
-        switch(skierDirection) {
-            case 0:
-                skierAssetName = 'skierCrash';
-                break;
-            case 1:
-                skierAssetName = 'skierLeft';
-                break;
-            case 2:
-                skierAssetName = 'skierLeftDown';
-                break;
-            case 3:
-                skierAssetName = 'skierDown';
-                break;
-            case 4:
-                skierAssetName = 'skierRightDown';
-                break;
-            case 5:
-                skierAssetName = 'skierRight';
-                break;
-        }
-
-        return skierAssetName;
-    };
-
-    var drawSkier = function() {
-        var skierAssetName = getSkierAsset();
-        var skierImage = loadedAssets[skierAssetName];
-        var x = (gameWidth - skierImage.width) / 2;
-        var y = (gameHeight - skierImage.height) / 2;
-
-        ctx.drawImage(skierImage, x, y, skierImage.width, skierImage.height);
-    };
-
-    var drawObstacles = function() {
-        var newObstacles = [];
-
-        _.each(obstacles, function(obstacle) {
-            var obstacleImage = loadedAssets[obstacle.type];
-            var x = obstacle.x - skierMapX - obstacleImage.width / 2;
-            var y = obstacle.y - skierMapY - obstacleImage.height / 2;
-
-            if(x < -100 || x > gameWidth + 50 || y < -100 || y > gameHeight + 50) {
-                return;
-            }
-
-            ctx.drawImage(obstacleImage, x, y, obstacleImage.width, obstacleImage.height);
-
-            newObstacles.push(obstacle);
+            width: this.width + 'px',
+            height: this.height + 'px'
         });
 
-        obstacles = newObstacles;
-    };
+    $('body').append(this.canvas);
 
-    var placeInitialObstacles = function() {
-        var numberObstacles = Math.ceil(_.random(5, 7) * (gameWidth / 800) * (gameHeight / 500));
+    this._ctx = this.canvas[0].getContext('2d');
+  };
 
-        var minX = -50;
-        var maxX = gameWidth + 50;
-        var minY = gameHeight / 2 + 100;
-        var maxY = gameHeight + 50;
+  clearCanvas() {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+  };
 
-        for(var i = 0; i < numberObstacles; i++) {
-            placeRandomObstacle(minX, maxX, minY, maxY);
-        }
+  get ctx() {
+    return this._ctx;
+  }
 
-        obstacles = _.sortBy(obstacles, function(obstacle) {
-            var obstacleImage = loadedAssets[obstacle.type];
-            return obstacle.y + obstacleImage.height;
-        });
-    };
+  get skier() {
+    return this._skier;
+  }
 
-    var placeNewObstacle = function(direction) {
-        var shouldPlaceObstacle = _.random(1, 8);
-        if(shouldPlaceObstacle !== 8) {
-            return;
-        }
+  set skier(skier) {
+    this._skier = skier;
+  }
 
-        var leftEdge = skierMapX;
-        var rightEdge = skierMapX + gameWidth;
-        var topEdge = skierMapY;
-        var bottomEdge = skierMapY + gameHeight;
+  get obstacles() {
+    return this._obstacles;
+  }
 
-        switch(direction) {
-            case 1: // left
-                placeRandomObstacle(leftEdge - 50, leftEdge, topEdge, bottomEdge);
-                break;
-            case 2: // left down
-                placeRandomObstacle(leftEdge - 50, leftEdge, topEdge, bottomEdge);
-                placeRandomObstacle(leftEdge, rightEdge, bottomEdge, bottomEdge + 50);
-                break;
-            case 3: // down
-                placeRandomObstacle(leftEdge, rightEdge, bottomEdge, bottomEdge + 50);
-                break;
-            case 4: // right down
-                placeRandomObstacle(rightEdge, rightEdge + 50, topEdge, bottomEdge);
-                placeRandomObstacle(leftEdge, rightEdge, bottomEdge, bottomEdge + 50);
-                break;
-            case 5: // right
-                placeRandomObstacle(rightEdge, rightEdge + 50, topEdge, bottomEdge);
-                break;
-            case 6: // up
-                placeRandomObstacle(leftEdge, rightEdge, topEdge - 50, topEdge);
-                break;
-        }
-    };
+  addObstacle(obstacle) {
+    this._obstacles.push(obstacle);
+  }
 
-    var placeRandomObstacle = function(minX, maxX, minY, maxY) {
-        var obstacleIndex = _.random(0, obstacleTypes.length - 1);
+  //Assets are provided by each individual Sprite class and placed into global queue.
+  loadAssets() {
+    var assetPromises = [];
+    _.each(Assets, function (asset) {
+        var assetImage = new Image();
+        var assetDeferred = new $.Deferred();
 
-        var position = calculateOpenPosition(minX, maxX, minY, maxY);
+        assetImage.onload = function() {
+            assetImage.width /= 2;
+            assetImage.height /= 2;
 
-        obstacles.push({
-            type : obstacleTypes[obstacleIndex],
-            x : position.x,
-            y : position.y
-        })
-    };
-
-    var calculateOpenPosition = function(minX, maxX, minY, maxY) {
-        var x = _.random(minX, maxX);
-        var y = _.random(minY, maxY);
-
-        var foundCollision = _.find(obstacles, function(obstacle) {
-            return x > (obstacle.x - 50) && x < (obstacle.x + 50) && y > (obstacle.y - 50) && y < (obstacle.y + 50);
-        });
-
-        if(foundCollision) {
-            return calculateOpenPosition(minX, maxX, minY, maxY);
-        }
-        else {
-            return {
-                x: x,
-                y: y
-            }
-        }
-    };
-
-    var checkIfSkierHitObstacle = function() {
-        var skierAssetName = getSkierAsset();
-        var skierImage = loadedAssets[skierAssetName];
-        var skierRect = {
-            left: skierMapX + gameWidth / 2,
-            right: skierMapX + skierImage.width + gameWidth / 2,
-            top: skierMapY + skierImage.height - 5 + gameHeight / 2,
-            bottom: skierMapY + skierImage.height + gameHeight / 2
+            asset.img = assetImage;
+            assetDeferred.resolve();
         };
+        assetImage.src = asset.src;
 
-        var collision = _.find(obstacles, function(obstacle) {
-            var obstacleImage = loadedAssets[obstacle.type];
-            var obstacleRect = {
-                left: obstacle.x,
-                right: obstacle.x + obstacleImage.width,
-                top: obstacle.y + obstacleImage.height - 5,
-                bottom: obstacle.y + obstacleImage.height
-            };
+        assetPromises.push(assetDeferred.promise());
+    });
 
-            return intersectRect(skierRect, obstacleRect);
-        });
+    return $.when.apply($, assetPromises);
+  };
 
-        if(collision) {
-            skierDirection = 0;
-        }
-    };
+  checkIfSkierHitObstacle() {
+      var skierRect = this.skier.calcRect();
 
-    var intersectRect = function(r1, r2) {
-        return !(r2.left > r1.right ||
-            r2.right < r1.left ||
-            r2.top > r1.bottom ||
-            r2.bottom < r1.top);
-    };
+      var _this = this;
+      var collision = _.find(this.obstacles, function (obstacle) {
+          return _this.intersectRect(skierRect, obstacle.calcRect());
+      });
 
-    var gameLoop = function() {
+      if (collision) {
+        this.skier.direction = 0;
+      }
+  };
 
-        ctx.save();
+  intersectRect(r1, r2) {
+      return !(r2.left > r1.right ||
+          r2.right < r1.left ||
+          r2.top > r1.bottom ||
+          r2.bottom < r1.top);
+  };
 
-        // Retina support
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  placeRandomObstacle(minX, maxX, minY, maxY) {
+      var position = this.calculateOpenPosition(minX, maxX, minY, maxY);
+      this.addObstacle(new Obstacle(position.x, position.y, this));
+  };
 
-        clearCanvas();
+  createInitialObstacles() {
+      var numberObstacles = Math.ceil(_.random(5, 7) * (this.width / 800) * (this.height / 500));
 
-        moveSkier();
+      var minX = -50;
+      var maxX = this.width + 50;
+      var minY = this.height / 2 + 100;
+      var maxY = this.height + 50;
 
-        checkIfSkierHitObstacle();
+      for (var i = 0; i < numberObstacles; i++) {
+        this.placeRandomObstacle(minX, maxX, minY, maxY);
+      }
+  };
 
-        drawSkier();
+  calculateOpenPosition(minX, maxX, minY, maxY) {
+      var x = _.random(minX, maxX);
+      var y = _.random(minY, maxY);
 
-        drawObstacles();
+      var foundCollision = _.find(this.obstacles, function (obstacle) {
+          return Math.abs(x - obstacle.x) < 50 && Math.abs(y - obstacle.y) < 50;
+      });
 
-        ctx.restore();
+      if (foundCollision) {
+          return this.calculateOpenPosition(minX, maxX, minY, maxY);
+      }
+      else {
+          return {
+              x: x,
+              y: y
+          }
+      }
+  };
 
-        requestAnimationFrame(gameLoop);
-    };
+  placeNewObstacle(direction) {
+      var shouldPlaceObstacle = _.random(1, 8);
+      if (shouldPlaceObstacle !== 8) {
+          return;
+      }
 
-    var loadAssets = function() {
-        var assetPromises = [];
+      var leftEdge = this.skier.x;
+      var rightEdge = this.skier.x + this.width;
+      var topEdge = this.skier.y;
+      var bottomEdge = this.skier.y + this.height;
 
-        _.each(assets, function(asset, assetName) {
-            var assetImage = new Image();
-            var assetDeferred = new $.Deferred();
+      switch (direction) {
+          case 1: // left
+              this.placeRandomObstacle(leftEdge - 50, leftEdge, topEdge, bottomEdge);
+              break;
+          case 2: // left down
+              this.placeRandomObstacle(leftEdge - 50, leftEdge, topEdge, bottomEdge);
+              this.placeRandomObstacle(leftEdge, rightEdge, bottomEdge, bottomEdge + 50);
+              break;
+          case 3: // down
+              this.placeRandomObstacle(leftEdge, rightEdge, bottomEdge, bottomEdge + 50);
+              break;
+          case 4: // right down
+              this.placeRandomObstacle(rightEdge, rightEdge + 50, topEdge, bottomEdge);
+              this.placeRandomObstacle(leftEdge, rightEdge, bottomEdge, bottomEdge + 50);
+              break;
+          case 5: // right
+              this.placeRandomObstacle(rightEdge, rightEdge + 50, topEdge, bottomEdge);
+              break;
+          case 6: // up
+              this.placeRandomObstacle(leftEdge, rightEdge, topEdge - 50, topEdge);
+              break;
+      }
+  };
 
-            assetImage.onload = function() {
-                assetImage.width /= 2;
-                assetImage.height /= 2;
+  setupKeyhandler() {
+      var _this = this;
+      $(window).keydown(function (event) {
+          switch (event.which) {
+              case 37: // left
+                  //Ensure skierDirection is set to LEFT if pressing left after a crash.
+                  if (_this.skier.direction === 0) {
+                    _this.skier.direction = 1;
+                  }
+                  else if (_this.skier.direction === 1) {
+                      _this.skier.translate(-1 * _this.skier.speed, 0);
+                      _this.placeNewObstacle(_this.skier.direction);
+                  }
+                  else {
+                      _this.skier.direction -= 1;
+                  }
+                  event.preventDefault();
+                  break;
+              case 39: // right
+                  //Ensure skier direction is set to RIGHT if pressing right after a crash.
+                  if (_this.skier.direction === 0) {
+                    _this.skier.direction = 5;
+                  }
+                  else if (_this.skier.direction === 5) {
+                    _this.skier.translate(_this.skier.speed, 0);
+                    _this.placeNewObstacle(_this.skier.direction);
+                  }
+                  else {
+                    _this.skier.direction += 1;
+                  }
+                  event.preventDefault();
+                  break;
+              case 38: // up
+                  if (_this.skier.direction === 1 || _this.skier.direction === 5) {
+                      _this.skier.translate(0, -1 * _this.skier.speed);
+                      _this.placeNewObstacle(6);
+                  }
+                  event.preventDefault();
+                  break;
+              case 40: // down
+                  _this.skier.direction = 3;
+                  event.preventDefault();
+                  break;
+          }
+      });
+  };
 
-                loadedAssets[assetName] = assetImage;
-                assetDeferred.resolve();
-            };
-            assetImage.src = asset;
+  gameLoop() {
+      this.ctx.save();
+      this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);  // Retina support
+      this.clearCanvas();
 
-            assetPromises.push(assetDeferred.promise());
-        });
+      this.skier.move();
+      this.checkIfSkierHitObstacle();
 
-        return $.when.apply($, assetPromises);
-    };
+      //If the skier is not standing still, generate a new obstacle.
+      if ([2, 3, 4].indexOf(this.skier.direction) !== -1) {
+        this.placeNewObstacle(this.skier.direction);
+      }
 
-    var setupKeyhandler = function() {
-        $(window).keydown(function(event) {
-            switch(event.which) {
-                case 37: // left
-                    //Ensure skierDirection is set to LEFT if pressing left after a crash.
-                    if(skierDirection === 0) {
-                      skierDirection = 1;
-                    }
-                    else if(skierDirection === 1) {
-                        skierMapX -= skierSpeed;
-                        placeNewObstacle(skierDirection);
-                    }
-                    else {
-                        skierDirection--;
-                    }
-                    event.preventDefault();
-                    break;
-                case 39: // right
-                    //Ensure skierDirection is set to LEFT if pressing left after a crash.
-                    if(skierDirection === 0) {
-                      skierDirection = 5;
-                    }
-                    else if(skierDirection === 5) {
-                        skierMapX += skierSpeed;
-                        placeNewObstacle(skierDirection);
-                    }
-                    else {
-                        skierDirection++;
-                    }
-                    event.preventDefault();
-                    break;
-                case 38: // up
-                    if(skierDirection === 1 || skierDirection === 5) {
-                        skierMapY -= skierSpeed;
-                        placeNewObstacle(6);
-                    }
-                    event.preventDefault();
-                    break;
-                case 40: // down
-                    skierDirection = 3;
-                    event.preventDefault();
-                    break;
-            }
-        });
-    };
+      //draw sprites
+      this.skier.draw();
+      _.each(this.obstacles, function (obstacle) {
+        obstacle.draw();
+      });
 
-    var initGame = function() {
-        setupKeyhandler();
-        loadAssets().then(function() {
-            placeInitialObstacles();
+      this.ctx.restore();
+      requestAnimationFrame(this.gameLoop.bind(this));
+  };
 
-            requestAnimationFrame(gameLoop);
-        });
-    };
+  init() {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.createCanvas();
 
-    initGame(gameLoop);
+    //Create initial sprites
+    this.skier = new Skier(0, 0, this, 5, 8);
+    this.createInitialObstacles();
+
+    this.setupKeyhandler();
+
+    var _this = this;
+    this.loadAssets()
+      .then(function() {
+        requestAnimationFrame(_this.gameLoop.bind(_this));
+    });
+  };
+}
+
+$(document).ready(function() {
+  var skiGame = new Game();
+  skiGame.init();
 });
