@@ -42,6 +42,10 @@ class Game {
     return this._obstacles;
   }
 
+  set obstacles(obstacles) {
+    this._obstacles = obstacles;
+  }
+
   addObstacle(obstacle) {
     this._obstacles.push(obstacle);
   }
@@ -78,6 +82,20 @@ class Game {
 
       if (collision) {
         this.skier.direction = 0;
+
+        this.ctx.font = "24px Serif";
+        this.ctx.fillStyle = "Red";
+        this.ctx.fillText("You have crashed! Press ENTER to try again.", 5, this.height - 40);
+
+        var currentScore = this.calcScore();
+
+        //Handle hiscore achievement
+        if (currentScore > this.hiscore) {
+          this.ctx.fillStyle = "Green";
+          this.ctx.fillText("New Hiscore Achieved: " + currentScore, 5, this.height - 15);
+          sessionStorage.setItem("hiscore", currentScore);
+        }
+
       }
   };
 
@@ -162,58 +180,80 @@ class Game {
 
   setupKeyhandler() {
       var _this = this;
+
       $(window).keydown(function (event) {
-          switch (event.which) {
-              case 37: // left
-                  //Ensure skierDirection is set to LEFT if pressing left after a crash.
-                  if (_this.skier.direction === 0) {
-                    _this.skier.direction = 1;
-                  }
-                  else if (_this.skier.direction === 1) {
-                      _this.skier.translate(-1 * _this.skier.speed, 0);
-                      _this.placeNewObstacle(_this.skier.direction);
-                  }
-                  else {
-                      _this.skier.direction -= 1;
-                  }
-                  event.preventDefault();
-                  break;
-              case 39: // right
-                  //Ensure skier direction is set to RIGHT if pressing right after a crash.
-                  if (_this.skier.direction === 0) {
-                    _this.skier.direction = 5;
-                  }
-                  else if (_this.skier.direction === 5) {
-                    _this.skier.translate(_this.skier.speed, 0);
-                    _this.placeNewObstacle(_this.skier.direction);
-                  }
-                  else {
-                    _this.skier.direction += 1;
-                  }
-                  event.preventDefault();
-                  break;
-              case 38: // up
-                  if (_this.skier.direction === 1 || _this.skier.direction === 5) {
-                      _this.skier.translate(0, -1 * _this.skier.speed);
-                      _this.placeNewObstacle(6);
-                  }
-                  event.preventDefault();
-                  break;
-              case 40: // down
-                  _this.skier.direction = 3;
-                  event.preventDefault();
-                  break;
+        //Ignore directional endpoint if skier has crashed.
+        //Only allow user to reset game on enter keypress
+        if (_this.skier.direction === 0) {
+          if (event.which === 13) {
+            _this.createSprites();
           }
-      });
+          return;
+        }
+
+        switch (event.which) {
+            case 37: // left
+            case 65: // A
+                if (_this.skier.direction === 1) {
+                    _this.skier.translate(-1 * _this.skier.speed, 0);
+                    _this.placeNewObstacle(_this.skier.direction);
+                }
+                else {
+                    _this.skier.direction -= 1;
+                }
+                event.preventDefault();
+                break;
+            case 39: // right
+            case 68: // D
+                if (_this.skier.direction === 5) {
+                  _this.skier.translate(_this.skier.speed, 0);
+                  _this.placeNewObstacle(_this.skier.direction);
+                }
+                else {
+                  _this.skier.direction += 1;
+                }
+                event.preventDefault();
+                break;
+            case 38: // up
+            case 87: // W
+                if (_this.skier.direction === 1 || _this.skier.direction === 5) {
+                    _this.skier.translate(0, -1 * _this.skier.speed);
+                    _this.placeNewObstacle(6);
+                }
+                event.preventDefault();
+                break;
+            case 40: // down
+            case 83: // S
+                _this.skier.direction = 3;
+                event.preventDefault();
+                break;
+        }
+    });
+  };
+
+  //Calculate score as total units moved from start position
+  calcScore() {
+    return Math.round(Math.sqrt(Math.pow(this.skier.x, 2) + Math.pow(this.skier.y, 2)));
+  }
+
+  get hiscore() {
+    return sessionStorage.getItem("hiscore") || 0;
+  }
+
+  drawScore() {
+    this.ctx.font = "20px Serif";
+    this.ctx.fillStyle = "Blue";
+    this.ctx.fillText("Score: " + this.calcScore(), 10, 25);
+    this.ctx.fillText("Hiscore: " + this.hiscore, 10, 45);
   };
 
   gameLoop() {
+    if (this.skier.direction !== 0) {
       this.ctx.save();
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);  // Retina support
       this.clearCanvas();
 
       this.skier.move();
-      this.checkIfSkierHitObstacle();
 
       //If the skier is not standing still, generate a new obstacle.
       if ([2, 3, 4].indexOf(this.skier.direction) !== -1) {
@@ -226,18 +266,26 @@ class Game {
         obstacle.draw();
       });
 
+      this.drawScore();
+      this.checkIfSkierHitObstacle();
+
       this.ctx.restore();
+    }
       requestAnimationFrame(this.gameLoop.bind(this));
   };
+
+  createSprites() {
+    this.skier = new Skier(0, 0, this, 5, 8);
+    this.obstacles = [];
+    this.createInitialObstacles();
+  }
 
   init() {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     this.createCanvas();
 
-    //Create initial sprites
-    this.skier = new Skier(0, 0, this, 5, 8);
-    this.createInitialObstacles();
+    this.createSprites();
 
     this.setupKeyhandler();
 
