@@ -60,6 +60,7 @@ Comments:
 * Written using ES6 class syntax. Had never written anything significant with it before, but seemed like a good fit because each item rendered onto the canvas shares a lot of attributes and functionality (x position, y position, rectangular collision, an asset image)
 * Rhino not implemented but in the future could implement it as a subclass of Obstacle with an overridden move() function
 * Ideally in a larger application I would have implemented some sort of asset management functionality instead of embedding snippets into each class as needed (maybe JSON configured?)
+* Configured and ran eslint against Google's ES6 standards, ignoring JSDOC and a few long lines.
 
 New Features Added:
 * WASD support
