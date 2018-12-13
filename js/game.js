@@ -262,13 +262,14 @@ class Game {
         this.placeNewObstacle(this.skier.direction);
       }
 
+      _.each(this.obstacles, function(obstacle) {
+        obstacle.draw();
+      });
+
       this.checkIfSkierHitObstacle();
 
       // draw sprites
       this.skier.draw();
-      _.each(this.obstacles, function(obstacle) {
-        obstacle.draw();
-      });
 
       this.drawScore();
 
